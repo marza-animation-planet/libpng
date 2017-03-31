@@ -16,6 +16,7 @@ zlibname = ("zlibstatic.lib" if sys.platform == "win32" else "libz.a")
 
 env.CMakeConfigure("libpng", opts={"PNG_TESTS": 0,
                                    "PNG_DEBUG": excons.GetArgument("debug", 0, int),
+                                   "CMAKE_INSTALL_LIBDIR": "lib",
                                    "ZLIB_INCLUDE_DIR": out_incdir,
                                    "ZLIB_LIBRARY": out_libdir + "/" + zlibname})
 
@@ -33,15 +34,15 @@ excons.SyncCache()
 
 def RequireLibpng(env, static=False):
    if not static:
-      pass
+      env.Append(CPPDEFINES=["PNG_USE_DLL"])
    env.Append(CPPPATH=[out_incdir])
    env.Append(LIBPATH=[out_libdir])
    if sys.platform != "win32":
       if static:
-         excons.StaticallyLink(env, "png", silent=True)
+         excons.StaticallyLink(env, "png16", silent=True)
          excons.StaticallyLink(env, "z", silent=True)
       else:
-         env.Append(LIBS=["png", "z"])
+         env.Append(LIBS=["png16", "z"])
    else:
       if static:
          env.Append(LIBS=["libpng16_static", "zlibstatic"])
