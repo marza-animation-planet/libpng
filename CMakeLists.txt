@@ -460,6 +460,11 @@ if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
 endif(MSVC)
 
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
+  # always compile with -fPIC when using gcc or clang
+  add_definitions("-fPIC")
+endif()
+
 if(PNG_DEBUG)
   add_definitions(-DPNG_DEBUG)
 endif()
