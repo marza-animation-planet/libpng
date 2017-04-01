@@ -711,6 +711,16 @@ if(PNG_SHARED)
   add_executable(png-fix-itxt ${png_fix_itxt_sources})
   target_link_libraries(png-fix-itxt ${ZLIB_LIBRARY} ${M_LIBRARY})
   list(APPEND PNG_BIN_TARGETS png-fix-itxt)
+
+  if(UNIX)
+    if(APPLE)
+      set_target_properties(pngfix PROPERTIES INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+      set_target_properties(png-fix-itxt PROPERTIES INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+    else()
+      set_target_properties(pngfix PROPERTIES INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+      set_target_properties(png-fix-itxt PROPERTIES INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+    endif()
+  endif()
 endif()
 
 # Ensure the CMAKE_LIBRARY_OUTPUT_DIRECTORY is set
@@ -779,6 +789,13 @@ if(PNG_SHARED)
     VERSION 16.${PNGLIB_RELEASE}.0
     SOVERSION 16
     CLEAN_DIRECT_OUTPUT 1)
+  if(UNIX)
+    if(APPLE)
+      set_target_properties(png PROPERTIES INSTALL_RPATH "@loader_path")
+    else()
+      set_target_properties(png PROPERTIES INSTALL_RPATH "$ORIGIN")
+    endif()
+  endif()
 endif()
 
 # If CMake > 2.4.x, we set a variable used below to export
