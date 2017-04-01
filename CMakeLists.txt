@@ -28,6 +28,8 @@ endif(POLICY CMP0053)
 if (POLICY CMP0054)
   cmake_policy(SET CMP0054 NEW)
 endif(POLICY CMP0054)
+# Disable warning about usage of LOCATION
+cmake_policy(SET CMP0026 OLD)
 
 set(CMAKE_CONFIGURATION_TYPES "Release;Debug;MinSizeRel;RelWithDebInfo")
 
