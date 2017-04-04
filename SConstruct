@@ -4,50 +4,53 @@ import sys
 import excons
 
 
-
 env = excons.MakeBaseEnv()
 
 out_incdir = excons.OutputBaseDirectory() + "/include"
 out_libdir = excons.OutputBaseDirectory() + "/lib"
 
-excons.Call("zlib")
+excons.Call("zlib", imp=["RequireZlib", "ZlibName"])
 
-zlibname = ("zlibstatic.lib" if sys.platform == "win32" else "libz.a")
+prjs = [
+   {  "name": "libpng",
+      "type": "cmake",
+      "cmake-opts": {"PNG_TESTS": 0,
+                     "PNG_DEBUG": excons.GetArgument("debug", 0, int),
+                     "CMAKE_INSTALL_LIBDIR": "lib",
+                     "ZLIB_INCLUDE_DIR": out_incdir,
+                     "ZLIB_LIBRARY": ZlibName(static=True)},
+      "cmake-srcs": excons.CollectFiles([".", "arm", "intel", "mips", "powerpc"], patterns=["*.c", "*.S"], recursive=False) +
+                    excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True, exclude=["zlib"]),
+      "deps": ["zlib"]
+   }
+]
 
-env.CMakeConfigure("libpng", opts={"PNG_TESTS": 0,
-                                   "PNG_DEBUG": excons.GetArgument("debug", 0, int),
-                                   "CMAKE_INSTALL_LIBDIR": "lib",
-                                   "ZLIB_INCLUDE_DIR": out_incdir,
-                                   "ZLIB_LIBRARY": out_libdir + "/" + zlibname})
-
-cmake_in = env.CMakeInputs(dirs=[".", "arm", "intel", "mips", "powerpc"], patterns=[re.compile(r"^.*\.(h|c|S)$")])
-cmake_out = env.CMakeOutputs()
-
-target = env.CMake(cmake_out, cmake_in)
-env.Depends(target, "zlib")
-
-env.CMakeClean()
-env.Alias("libpng", target)
-
-excons.SyncCache()
+excons.DeclareTargets(env, prjs)
 
 
 def RequireLibpng(env, static=False):
-   if not static:
-      env.Append(CPPDEFINES=["PNG_USE_DLL"])
    env.Append(CPPPATH=[out_incdir])
    env.Append(LIBPATH=[out_libdir])
-   if sys.platform != "win32":
-      if static:
-         excons.StaticallyLink(env, "png16", silent=True)
-         excons.StaticallyLink(env, "z", silent=True)
-      else:
-         env.Append(LIBS=["png16", "z"])
+   if not static:
+      env.Append(CPPDEFINES=["PNG_USE_DLL"])
+      env.Append(LIBS=["libpng16" if sys.platform == "win32" else "png16"])
    else:
-      if static:
-         env.Append(LIBS=["libpng16_static", "zlibstatic"])
+      if sys.platform == "win32":
+         env.Append(LIBS=["libpng16_static"])
       else:
-         env.Append(LIBS=["libpng16", "zlib"])
+         if not excons.StaticallyLink(env, "png16", silent=True):
+            env.Append(LIBS=["png16"])
+      RequireZlib(env, static=True)
 
-Export("RequireLibpng")
+def LibpngName(static=False):
+   basename = "libpng16"
+   if sys.platform == "win32":
+      if static:
+         basename += "_static"
+      basename += ".lib"
+   else:
+      basename += (".a" if static else ".so")
+   return out_libdir + "/" + basename
+
+Export("RequireLibpng LibpngName")
 

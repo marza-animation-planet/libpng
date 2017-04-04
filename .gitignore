@@ -3,5 +3,5 @@
 /.build
 *.dblite
 excons.cache
-*.cmake.inputs
-*.cmake.outputs
+*.cmake.*
+
