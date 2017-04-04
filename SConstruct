@@ -15,37 +15,49 @@ png_deps   = []
 
 # Allow custom zlib setup using flags:
 #   with-zlib, with-zlib-inc, with-zlib-lib, zlib-libname, zlib-libsuffix, zlib-static
-zlib_name = None
+zlib_path = None
 zlib_incdir, zlib_libdir = excons.GetDirs("zlib")
 
 if zlib_incdir and zlib_libdir:
-   zlib_name = excons.GetArgument("zlib-libname", None)
+   zlib_libname = excons.GetArgument("zlib-libname", None)
    zlib_static = (excons.GetArgument("zlib-static", 0, int) != 0)
 
-   if zlib_name is None:
-      zlib_suffix = excons.GetArgument("zlib-libsuffix", "")
-      if sys.platform == "win32":
-         basename = "%s%s.lib" % (("zlib" if zlib_static else "zdll"), zlib_suffix)
-      else:
-         basename = "libz%s" % zlib_suffix
-         basename += (".a" if zlib_static else ".so")
-      zlib_name = "%s/%s" % (zlib_libdir, basename)
-      if not os.path.isfile(zlib_name):
-         zlib_name = None
-         if sys.platform != "win32" and excons.arch_dir == "x64":
-            zlib_name = "%s64/%s" % (zlib_libdir, basename)
-            if not os.path.isfile(zlib_name):
-               zlib_name = None
+   if zlib_libname is None:
+      zlib_libname = ("z" if sys.platform != "win32" else ("zlib" if zlib_static else "zdll"))
+      zlib_libname += excons.GetArgument("zlib-libsuffix", "")
+
+   if sys.platform == "win32":
+      basename = zlib_libname + ".lib"
+   else:
+      basename = "lib" + zlib_libname + (".a" if zlib_static else ".so")
+
+   zlib_path = "%s/%s" % (zlib_libdir, basename)
+   if not os.path.isfile(zlib_path):
+      zlib_path = None
+      if sys.platform != "win32" and excons.arch_dir == "x64":
+         zlib_path = "%s64/%s" % (zlib_libdir, basename)
+         if not os.path.isfile(zlib_path):
+            zlib_path = None
 
    # Setup defines in environment to be picked up by configure
-   if zlib_name and not zlib_static:
+   if zlib_path and not zlib_static:
       cflags = os.environ.get("CFLAGS", "") + " -DZLIB_DLL"
       os.environ["CFLAGS"] = cflags
 
-if zlib_name is None:
+   def RequireZlib(env):
+      env.Append(CPPPATH=[zlib_incdir])
+      env.Append(LIBPATH=[zlib_libdir])
+      if not zlib_static:
+         env.Append(CPPDEFINES=["ZLIB_DLL"])
+         env.Append(LIBS=[zlib_libname])
+      else:
+         if not excons.StaticallyLink(env, zlib_libname, silent=True):
+            env.Append(LIBS=[zlib_libname])
+
+if zlib_path is None:
    excons.PrintOnce("Build zlib from sources ...")
    excons.Call("zlib", imp=["RequireZlib", "ZlibName"])
-   zlib_incdir, zlib_libdir, zlib_name = out_incdir, out_libdir, ZlibName(static=True)
+   zlib_incdir, zlib_libdir, zlib_path = out_incdir, out_libdir, ZlibName(static=True)
    png_deps = ["zlib"]
 
 # PNG library ==================================================================
@@ -57,7 +69,7 @@ prjs = [
                      "PNG_DEBUG": excons.GetArgument("debug", 0, int),
                      "CMAKE_INSTALL_LIBDIR": "lib",
                      "ZLIB_INCLUDE_DIR": zlib_incdir,
-                     "ZLIB_LIBRARY": zlib_name},
+                     "ZLIB_LIBRARY": zlib_path},
       "cmake-srcs": excons.CollectFiles([".", "arm", "intel", "mips", "powerpc"],
                                         patterns=["*.c", "*.S"], recursive=False) +
                     excons.CollectFiles(".", patterns=["CMakeLists.txt"],
