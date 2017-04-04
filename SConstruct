@@ -23,7 +23,7 @@ if zlib_incdir and zlib_libdir:
    zlib_static = (excons.GetArgument("zlib-static", 0, int) != 0)
 
    if zlib_name is None:
-      zlib_suffix = excons.GetArgument("zlib-libsuffix", "")      
+      zlib_suffix = excons.GetArgument("zlib-libsuffix", "")
       if sys.platform == "win32":
          basename = "%s%s.lib" % (("zlib" if zlib_static else "zdll"), zlib_suffix)
       else:
@@ -66,11 +66,7 @@ prjs = [
    }
 ]
 
-excons.AddHelpTargets(libpng="PNG library")
-if png_deps:
-   excons.AddHelpTargets(zlib="Z library")
-excons.AddHelpOptions(libpng=excons.tools.zlib.GetOptionsString())
-
+excons.AddHelpOptions(libpng="EXTERNAL "+excons.tools.zlib.GetOptionsString())
 excons.DeclareTargets(env, prjs)
 
 # ==============================================================================
