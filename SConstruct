@@ -29,10 +29,11 @@ if rv is None:
    excons.PrintOnce("Build zlib from sources ...")
    excons.Call("zlib", imp=["RequireZlib", "ZlibPath"])
    cfg_deps.append(excons.cmake.OutputsCachePath("zlib"))
-   cmake_opts["ZLIB_LIBRARY"] = ZlibPath(static=True)
+   zlib_static = (excons.GetArgument("zlib-static", 1, int) != 0)
+   cmake_opts["ZLIB_LIBRARY"] = ZlibPath(static=zlib_static)
    cmake_opts["ZLIB_INCLUDE_DIR"] = out_incdir
    def ZlibRequire(env):
-      RequireZlib(env, static=True)
+      RequireZlib(env, static=zlib_static)
 else:
    ZlibRequire = rv
 
@@ -47,7 +48,10 @@ prjs = [
    }
 ]
 
-excons.AddHelpOptions(libpng=excons.ExternalLibHelp("zlib"))
+excons.AddHelpOptions(libpng="""CMAKE PNG OPTIONS
+  zlib-static=0|1 : When building zlib from sources, link static version of the library to libpng. [1]
+
+%s""" % excons.ExternalLibHelp("zlib"))
 excons.DeclareTargets(env, prjs)
 
 # ==============================================================================
