@@ -51,6 +51,7 @@ prjs = [
 excons.AddHelpOptions(libpng="""PNG OPTIONS
   zlib-static=0|1 : When building zlib from sources, link static version of the library to libpng. [1]""")
 excons.AddHelpOptions(ext_zlib=excons.ExternalLibHelp("zlib"))
+
 excons.DeclareTargets(env, prjs)
 
 # ==============================================================================
