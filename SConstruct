@@ -39,23 +39,6 @@ else:
 
 # PNG library ==================================================================
 
-prjs = [
-   {  "name": "libpng",
-      "type": "cmake",
-      "cmake-opts": cmake_opts,
-      "cmake-cfgs": excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True, exclude=["zlib"]) + cfg_deps,
-      "cmake-srcs": excons.CollectFiles([".", "arm", "intel", "mips", "powerpc"], patterns=["*.c", "*.S"], recursive=False),
-   }
-]
-
-excons.AddHelpOptions(libpng="""PNG OPTIONS
-  zlib-static=0|1 : When building zlib from sources, link static version of the library to libpng. [1]""")
-excons.AddHelpOptions(ext_zlib=excons.ExternalLibHelp("zlib"))
-
-excons.DeclareTargets(env, prjs)
-
-# ==============================================================================
-
 def LibpngName(static=False):
    libname = "png16"
    if sys.platform == "win32":
@@ -75,9 +58,27 @@ def LibpngPath(static=False):
 def RequireLibpng(env, static=False):
    env.Append(CPPPATH=[out_incdir])
    env.Append(LIBPATH=[out_libdir])
-   excons.Link(env, LibpngName(static), static=static, force=True, silent=True)
+   excons.Link(env, LibpngPath(static), static=static, force=True, silent=True)
    if static:
       ZlibRequire(env)
+
+prjs = [
+   {  "name": "libpng",
+      "type": "cmake",
+      "cmake-opts": cmake_opts,
+      "cmake-cfgs": excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True, exclude=["zlib"]) + cfg_deps,
+      "cmake-srcs": excons.CollectFiles([".", "arm", "intel", "mips", "powerpc"], patterns=["*.c", "*.S"], recursive=False),
+      "cmake-outputs": ["include/png.h",
+                        "include/pngconf.h",
+                        LibpngPath(False),
+                        LibpngPath(True)]
+   }
+]
+
+excons.AddHelpOptions(libpng="""PNG OPTIONS
+  zlib-static=0|1 : When building zlib from sources, link static version of the library to libpng. [1]""")
+
+excons.DeclareTargets(env, prjs)
 
 Export("LibpngName LibpngPath RequireLibpng")
 
