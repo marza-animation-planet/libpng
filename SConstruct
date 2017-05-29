@@ -25,7 +25,7 @@ def ZlibDefines(static):
    return ([] if static else ["ZLIB_DLL"])
 
 rv = excons.cmake.ExternalLibRequire(cmake_opts, name="zlib", libnameFunc=ZlibLibname, definesFunc=ZlibDefines)
-if rv is None:
+if rv["require"] is None:
    excons.PrintOnce("libpng: Build zlib from sources ...")
    excons.Call("zlib", imp=["RequireZlib", "ZlibPath"])
    cfg_deps.append(excons.cmake.OutputsCachePath("zlib"))
@@ -35,7 +35,7 @@ if rv is None:
    def ZlibRequire(env):
       RequireZlib(env, static=zlib_static)
 else:
-   ZlibRequire = rv
+   ZlibRequire = rv["require"]
 
 # PNG library ==================================================================
 
@@ -56,6 +56,8 @@ def LibpngPath(static=False):
    return out_libdir + "/" + libname
 
 def RequireLibpng(env, static=False):
+   if not static and sys.platform == "win32":
+      env.Append(CPPDEFINES=["PNG_USE_DLL"])
    env.Append(CPPPATH=[out_incdir])
    env.Append(LIBPATH=[out_libdir])
    excons.Link(env, LibpngPath(static), static=static, force=True, silent=True)
