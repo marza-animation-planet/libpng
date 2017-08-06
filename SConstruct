@@ -13,6 +13,7 @@ out_libdir = excons.OutputBaseDirectory() + "/lib"
 cfg_deps   = []
 
 cmake_opts = {"PNG_TESTS": 0,
+              "PNG_HARDWARE_OPTIMIZATIONS": excons.GetArgument("libpng-hwopts", 1, int),
               "PNG_DEBUG": excons.GetArgument("debug", 0, int),
               "CMAKE_INSTALL_LIBDIR": "lib"}
 
@@ -78,9 +79,9 @@ prjs = [
 ]
 
 excons.AddHelpOptions(libpng="""PNG OPTIONS
-  zlib-static=0|1 : When building zlib from sources, link static version of the library to libpng. [1]""")
+  libpng-hwopts=0|1 : Enable hardware optimizations. [1]
+  zlib-static=0|1   : When building zlib from sources, link static version of the library to libpng. [1]""")
 
 excons.DeclareTargets(env, prjs)
 
 Export("LibpngName LibpngPath RequireLibpng")
-
