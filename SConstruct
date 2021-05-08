@@ -4,6 +4,7 @@ import sys
 import string
 import excons
 import excons.cmake
+import SCons.Script # pylint: disable=import-error
 
 
 env = excons.MakeBaseEnv()
@@ -23,18 +24,18 @@ def ZlibLibname(static):
    return ("z" if sys.platform != "win32" else ("zlib" if static else "zdll"))
 
 def ZlibDefines(static):
-   return ([] if static else ["ZLIB_DLL"])
+   return ([] if (static or sys.platform != "win32") else ["ZLIB_DLL"])
 
 rv = excons.cmake.ExternalLibRequire(cmake_opts, name="zlib", libnameFunc=ZlibLibname, definesFunc=ZlibDefines)
 if rv["require"] is None:
    excons.PrintOnce("libpng: Build zlib from sources ...")
-   excons.Call("zlib", imp=["RequireZlib", "ZlibPath"])
+   excons.Call("zlib", targets=["zlib"], imp=["RequireZlib", "ZlibPath"])
    cfg_deps.append(excons.cmake.OutputsCachePath("zlib"))
    zlib_static = (excons.GetArgument("zlib-static", 1, int) != 0)
-   cmake_opts["ZLIB_LIBRARY"] = ZlibPath(static=zlib_static)
+   cmake_opts["ZLIB_LIBRARY"] = ZlibPath(static=zlib_static) # pylint: disable=undefined-variable
    cmake_opts["ZLIB_INCLUDE_DIR"] = out_incdir
    def ZlibRequire(env):
-      RequireZlib(env, static=zlib_static)
+      RequireZlib(env, static=zlib_static) # pylint: disable=undefined-variable
 else:
    ZlibRequire = rv["require"]
 
@@ -84,4 +85,4 @@ excons.AddHelpOptions(libpng="""PNG OPTIONS
 
 excons.DeclareTargets(env, prjs)
 
-Export("LibpngName LibpngPath RequireLibpng")
+SCons.Script.Export("LibpngName LibpngPath RequireLibpng")
