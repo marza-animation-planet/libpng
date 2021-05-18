@@ -47,6 +47,8 @@ def LibpngName(static=False):
       libname = "lib" + libname
       if static:
          libname += "_static"
+      if excons.GetArgument("debug", 0, int) != 0:
+         libname += "d"
    return libname
 
 def LibpngPath(static=False):
