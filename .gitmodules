@@ -3,4 +3,4 @@
 	url = git@github.com:marza-animation-planet/excons.git
 [submodule "zlib"]
 	path = zlib
-	url = git@github.com:marza-animation-planet/zlib
+	url = git@github.com:marza-animation-planet/zlib.git
